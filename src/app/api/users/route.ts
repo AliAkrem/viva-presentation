@@ -14,11 +14,6 @@ export async function GET() {
 
 // POST 
 
-export default async function POST() {
-
-
-
-}
 
 
 

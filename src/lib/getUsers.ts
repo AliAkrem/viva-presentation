@@ -1,10 +1,10 @@
-import { supabase } from "@/utils/SuperbaseClients";
+import { supabaseBrowserClient } from "@/utils/SuperbaseClients";
 
 export default async function getUsers() {
 
 
 
-    let { data: users, error } = await supabase
+    let { data: users, error } = await supabaseBrowserClient
         .from('faculty')
         .select('*')
 

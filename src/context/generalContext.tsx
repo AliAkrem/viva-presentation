@@ -55,9 +55,7 @@ export const GeneralContextProvider = ({ children }: Props) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
-
-  console.log(session);
+  }, [supabase.auth]);
 
   return (
     <generalState.Provider value={{ session }}>
