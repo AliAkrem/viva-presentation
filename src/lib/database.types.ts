@@ -417,6 +417,9 @@ export interface Database {
           role_id: string
         }
         Returns: boolean
+      } , 
+      is_admin :  { 
+        Returns : boolean
       }
     }
     Enums: {

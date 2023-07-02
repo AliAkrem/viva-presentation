@@ -4,7 +4,6 @@ import React, { createContext, useContext } from "react";
 import { AuthError, Session } from "@supabase/supabase-js";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export interface GeneralState {
@@ -47,15 +46,17 @@ export const GeneralContextProvider = ({ children }: Props) => {
 
   useEffect(() => {
     const {
-      data: { subscription  }, 
+      data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      
       setSession(session);
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase.auth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <generalState.Provider value={{ session }}>

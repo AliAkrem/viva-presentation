@@ -9,6 +9,7 @@ import { Notifications } from "@mantine/notifications";
 import { useState, useEffect } from "react";
 import Loading from "./loading";
 import { useLocalStorage } from "@mantine/hooks";
+import { ModalsProvider } from "@mantine/modals";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [isLoading, setLoading] = useState(true);
@@ -42,7 +43,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         }}
       >
         <Notifications position="bottom-left" />
-        {children}
+        <ModalsProvider>{children}</ModalsProvider>
       </MantineProvider>
     </ColorSchemeProvider>
   );

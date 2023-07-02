@@ -20,7 +20,6 @@ export default async function AdminLayout({
 
   return (
     <>
-      <nav>admin navbar</nav>
       {children}
     </>
   );

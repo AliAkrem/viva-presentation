@@ -16,18 +16,20 @@ type Props = {
 export default async function handleSignIn({ loginCredentials, router, setLoginLoading }: Props) {
 
 
-    
+
+
     const { error } = await supabaseBrowserClient.auth.signInWithPassword({
         email: loginCredentials.email,
         password: loginCredentials.password,
+
     })
-    
+
     if (error) {
         router.push('/login?error=badLoginCredentials')
     } else {
         router.push('/')
-    }
 
+    }
     setLoginLoading(false)
 
 

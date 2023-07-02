@@ -45,13 +45,13 @@ const useStyles = createStyles((theme) => ({
 //? ________________________________________________________________
 //? validation requirement _________________________________________
 import { isEmail, isNotEmpty, useForm } from "@mantine/form";
-import { combineValidators } from "@/validators/combineValidators";
-import { isPasswordValid } from "@/validators/validSchema";
+import { combineValidators } from "@/utils/validators/combineValidators";
+import { isPasswordValid } from "@/utils/validators/validSchema";
 import { useRouter, useSearchParams } from "next/navigation";
 import { IconAlertCircle } from "@tabler/icons-react";
 import handleSignIn from "@/functions/handleSignIn";
-import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
 //? ________________________________________________________________
+
 
 export default function LoginForm() {
   const { classes } = useStyles();
@@ -82,7 +82,6 @@ export default function LoginForm() {
     },
   });
   // * __________________________________________
-
 
   const _handleLogin = () => {
     setLoginLoading(true);
@@ -134,18 +133,6 @@ export default function LoginForm() {
             Login
           </Button>
         </form>
-        <Text ta="center" mt="md">
-          Don&apos;t have an account?
-          <Button
-            className="underline"
-            variant="white"
-            onClick={() => {
-              router.push("/sign-up");
-            }}
-          >
-            Register
-          </Button>
-        </Text>
       </Paper>
     </div>
   );
