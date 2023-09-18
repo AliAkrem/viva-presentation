@@ -28,12 +28,12 @@ export default async function RootLayout({
       <body
       //  className={inter.className}
       >
-        <AuthProvider accessToken={accessToken}>
-          <Providers>
+        <Providers>
+          <AuthProvider accessToken={accessToken}>
             <HomeNavBar />
-            <DashBoard>{children}</DashBoard>
-          </Providers>
-        </AuthProvider>
+            {accessToken ? <DashBoard>{children}</DashBoard> : children}
+          </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

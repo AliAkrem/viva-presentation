@@ -1,7 +1,11 @@
-export default function Home() {
+import Home from "@/(composition)/home";
+
+export default function HomePage() {
   return (
     <>
-      <main></main>
+      <main>
+      <Home />
+      </main>
     </>
   );
 }

@@ -1,0 +1,77 @@
+-- inserts a row into public.profiles after a new user is created and confirmed their email
+create function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if new.confirmed_at is not null then
+    insert into public.profiles (id)
+    values (new.id);
+  end if;
+  return new;
+end;
+$$;
+
+-- trigger the function every time a user is created
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+
+
+begin
+  if new.confirmed_at is not null then
+    insert into public.users (id, first_name, last_name, user_email)
+    values (new.id, new.raw_user_meta_data.first_name,new.raw_user_meta_data.last_name, new.email  );
+    if  raw_user_meta_data.role = 'student' then 
+      insert into public.students (id , student_code) 
+      values (new.id, raw_user_meta_data.student_code)
+  end if;
+  return new;
+end;
+
+
+
+SELECT raw_user_meta_data INTO metadata FROM auth.users WHERE id = current_setting('jwt.claims.user_id')::uuid;
+  value := metadata->>'my_key';
+  INSERT INTO my_table (my_column) VALUES (value);
+
+
+  import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+export async function middleware(req: NextRequest) {
+  // We need to create a response and hand it to the supabase client to be able to modify the response headers.
+  const res = NextResponse.next()
+  // Create authenticated Supabase Client.
+  const supabase = createMiddlewareClient({ req, res })
+  // Check if we have a session
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  // Check auth condition
+  if (session?.user.email?.endsWith('@gmail.com')) {
+    // Authentication successful, forward request to protected route.
+    return res
+  }
+
+  // Auth condition not met, redirect to home page.
+  const redirectUrl = req.nextUrl.clone()
+  redirectUrl.pathname = '/'
+  redirectUrl.searchParams.set(`redirectedFrom`, req.nextUrl.pathname)
+  return NextResponse.redirect(redirectUrl)
+}
+
+export const config = {
+  matcher: '/middleware-protected/:path*',
+}
+
+
+
+users(first_name , last_name ) ,students(user_id, student_code) , registration(user_id, specialty_id , year_scholar) specialty(id, name )year_scholar (id, year ) create view join this table
+
+
+student_registration (name , specialty_name, year_scholar)

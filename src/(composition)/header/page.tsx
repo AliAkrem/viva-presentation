@@ -147,7 +147,6 @@ const mockdata = [
   },
 ];
 
-// import { getSession, signOut, useSession } from "";
 import { useRouter } from "next/navigation";
 import UserButton from "@/components/userButton/page";
 
@@ -168,7 +167,6 @@ export default function HomeNavBar() {
   const router = useRouter();
 
   const { initial, role, session, user, signOut } = useAuth();
-
 
   const links = mockdata.map((item) => (
     <UnstyledButton className={classes.subLink} key={item.title}>
@@ -245,7 +243,7 @@ export default function HomeNavBar() {
                   <Group position="apart">
                     <div>
                       <Text fw={500} fz="sm">
-                        (<Link href="/login">Get started</Link>)
+                        <Link href="/login">Get started</Link>
                       </Text>
                       <Text size="xs" color="dimmed">
                         try sign-up and login system using{" "}

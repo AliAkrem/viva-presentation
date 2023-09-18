@@ -1,9 +1,6 @@
 import StudentTable from "@/(composition)/Tables/table";
 import { Database } from "@/lib/database.types";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-
-type student = Database["public"]["Tables"]["students"]["Row"];
+import { supabase } from "@/utils/superbase-server";
 
 export type Student = {
   student_id: Database["public"]["Tables"]["users"]["Row"]["id"];
@@ -14,7 +11,9 @@ export type Student = {
 };
 
 export default async function StudentsTablePage() {
-  const supabase = createServerComponentClient<Database>({ cookies });
+ 
+
+
 
   const { data: students, error } = await supabase
     .from("students")

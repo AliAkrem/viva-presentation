@@ -27,81 +27,33 @@ import Link from "next/link";
 
 import type { Student } from "@/app/students/page";
 import { nanoid } from "nanoid";
+import { Supervisors } from "@/app/supervisors/page";
+import { IconDotsVertical } from "@tabler/icons-react";
 
 type TableProps = {
-  students: Student[];
+  supervisors: Supervisors[];
 };
 
-export default function StudentTable({ students }: TableProps) {
+export default function SupervisorsTable({ supervisors }: TableProps) {
   const { supabase } = useAuth();
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [tableData, setTableData] = useState(() => students);
+  const [tableData, setTableData] = useState(() => supervisors);
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string;
   }>({});
 
-  const handleCreateNewRow = async (values: Student) => {
-    const { data: new_user, error: error1 } = await supabase.auth.signUp({
-      email: values.email,
-      password: nanoid(), //default password
-
-      //!! change it later with strong password auto generated user will invited by email to access and change password
-
-      options: {
-        emailRedirectTo: `${location.origin}/auth/callback`,
-        data: {
-          first_name: values.first_name,
-          last_name: values.last_name,
-          role: "student",
-          student_code: values.code,
-        },
-      },
-    });
-
-    if (error1) return;
-
-    const { error: error2 } = await supabase.from("users").insert({
-      id: new_user.user?.id,
-      first_name: values.first_name,
-      last_name: values.last_name,
-      user_email: values.email,
-    });
-
-    if (error2) return;
-
-    const { error: error3 } = await supabase
-      .from("students")
-      .insert({ id: new_user.user?.id, student_code: values.code });
-
-    if (error3) return;
-
+  const handleCreateNewRow = async (values: Supervisors) => {
     tableData.push(values);
     setTableData([...tableData]);
   };
 
-  const handleSaveRowEdits: MRT_TableOptions<Student>["onEditingRowSave"] =
+  const handleSaveRowEdits: MRT_TableOptions<Supervisors>["onEditingRowSave"] =
     async ({ exitEditingMode, row, values }) => {
       if (!Object.keys(validationErrors).length) {
         //?send/receive api updates here, then refetch or update local table data for re-render
 
         // TODO ------ create supabase function handle update of student to avoid multi request -----
-        const { error: error1 } = await supabase
-          .from("users")
-          .update({
-            first_name: values.first_name,
-            last_name: values.last_name,
-            user_email: values.email,
-          })
-          .eq("id", row.getValue("student_id"))
-          .select();
-
-        const { error: error2 } = await supabase
-          .from("students")
-          .update({ student_code: values.code })
-          .eq("id", row.getValue("student_id"));
-
-        if (error1 || error2) return;
 
         tableData[row.index] = values;
         setTableData([...tableData]);
@@ -113,7 +65,7 @@ export default function StudentTable({ students }: TableProps) {
     setValidationErrors({});
   };
 
-  const openModal = (row: MRT_Row<Student>) => {
+  const openModal = (row: MRT_Row<Supervisors>) => {
     modals.openConfirmModal({
       title: "Please confirm your action",
       children: (
@@ -128,7 +80,7 @@ export default function StudentTable({ students }: TableProps) {
   };
 
   const handleDeleteRow = useCallback(
-    (row: MRT_Row<Student>) => {
+    (row: MRT_Row<Supervisors>) => {
       const deleteRow = async () => {
         const { error } = await supabase
           .from("users")
@@ -147,38 +99,19 @@ export default function StudentTable({ students }: TableProps) {
 
   const getCommonEditTextInputProps = useCallback(
     (
-      cell: MRT_Cell<Student>
-    ): MRT_ColumnDef<Student>["mantineEditTextInputProps"] => {
+      cell: MRT_Cell<Supervisors>
+    ): MRT_ColumnDef<Supervisors>["mantineEditTextInputProps"] => {
       return {
         error: validationErrors[cell.id],
-        onBlur: (event) => {
-          const isValid =
-            cell.column.id === "email"
-              ? validateEmail(event.target.value)
-              : validateRequired(event.target.value);
-          if (!isValid) {
-            //set validation error for cell if invalid
-            setValidationErrors({
-              ...validationErrors,
-              [cell.id]: `${cell.column.columnDef.header} is required`,
-            });
-          } else {
-            //remove validation error for cell if valid
-            delete validationErrors[cell.id];
-            setValidationErrors({
-              ...validationErrors,
-            });
-          }
-        },
       };
     },
     [validationErrors]
   );
 
-  const columns = useMemo<MRT_ColumnDef<Student>[]>(
+  const columns = useMemo<MRT_ColumnDef<Supervisors>[]>(
     () => [
       {
-        accessorKey: "student_id",
+        accessorKey: "id",
         header: "ID",
         enableColumnOrdering: false,
         enableEditing: false, //disable editing on this column
@@ -187,37 +120,24 @@ export default function StudentTable({ students }: TableProps) {
         size: 4,
         columnDefType: "data",
       },
-      {
-        accessorKey: "code",
-        header: "code",
 
-        mantineEditTextInputProps: ({ cell  }) => ({
-          ...getCommonEditTextInputProps(cell),
-        }),
-      },
       {
         accessorKey: "first_name",
         header: "First Name",
         // size: 140,
-        mantineEditTextInputProps: ({ cell }) => ({
-          ...getCommonEditTextInputProps(cell),
-        }),
       },
       {
         accessorKey: "last_name",
         header: "Last Name",
         // size: 140,
-        mantineEditTextInputProps: ({ cell }) => ({
-          ...getCommonEditTextInputProps(cell),
-        }),
       },
       {
-        accessorKey: "email",
-        header: "Email",
-        mantineEditTextInputProps: ({ cell }) => ({
-          ...getCommonEditTextInputProps(cell),
-          type: "email",
-        }),
+        accessorKey: "position_abbreviated",
+        header: "Academic position",
+      },
+      {
+        accessorKey: "n_assigned_team",
+        header: "number of teams",
       },
     ],
     [getCommonEditTextInputProps]
@@ -244,37 +164,23 @@ export default function StudentTable({ students }: TableProps) {
         onEditingRowCancel={handleCancelRowEdits}
         renderRowActions={({ row, table }) => (
           <Box sx={{ display: "flex", gap: "16px" }}>
-            <Tooltip position="left" label="Edit">
-              <ActionIcon onClick={() => table.setEditingRow(row)}>
-                <IconEdit />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip position="right" label="Delete">
-              <ActionIcon
-                color="red"
-                onClick={() => {
-                  openModal(row);
-                }}
-              >
-                <IconTrash />
-              </ActionIcon>
-            </Tooltip>
-          </Box>
-        )}
-        renderTopToolbarCustomActions={() => (
-          <Box>
-            <Button onClick={() => setCreateModalOpen(true)} variant="light">
-              Create New Account
-            </Button>
-
-            <Menu>
+            <Menu position="left">
               <Menu.Target>
-                <Button variant="light">specialty</Button>
+                <ActionIcon variant="light">
+                  <IconDotsVertical />
+                </ActionIcon>
               </Menu.Target>
               <Menu.Dropdown>
-                <Link href="students/?specialty=computerscience">
-                  computer science
-                </Link>
+                <Menu.Item>
+                  <Tooltip label="remove">
+                    <IconTrash color="red" />
+                  </Tooltip>
+                </Menu.Item>
+                <Menu.Item>
+                  <Tooltip label="edit">
+                    <IconEdit  />
+                  </Tooltip>
+                </Menu.Item>
               </Menu.Dropdown>
             </Menu>
           </Box>
@@ -292,9 +198,9 @@ export default function StudentTable({ students }: TableProps) {
 }
 
 interface Props {
-  columns: MRT_ColumnDef<Student>[];
+  columns: MRT_ColumnDef<Supervisors>[];
   onClose: () => void;
-  onSubmit: (values: Student) => void;
+  onSubmit: (values: Supervisors) => void;
   open: boolean;
 }
 
@@ -305,9 +211,7 @@ export const CreateNewAccountModal = ({
   onClose,
   onSubmit,
 }: Props) => {
-  const inputs = columns.filter(
-    (column) => column.accessorKey !== "student_id"
-  );
+  const inputs = columns.filter((column) => column.accessorKey !== "id");
 
   const [values, setValues] = useState<any>(() =>
     inputs.reduce((acc, column) => {
@@ -325,7 +229,7 @@ export const CreateNewAccountModal = ({
 
   return (
     <Modal opened={open} onClose={onClose}>
-      <Title ta="center">Create New Account</Title>
+      <Title ta="center">add supervisors</Title>
       <form onSubmit={(e) => e.preventDefault()}>
         <Stack
           sx={{
@@ -363,13 +267,3 @@ export const CreateNewAccountModal = ({
     </Modal>
   );
 };
-
-const validateRequired = (value: string) => !!value.length;
-const validateEmail = (email: string) =>
-  !!email.length &&
-  email
-    .toLowerCase()
-    .match(
-      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-    );
-const validateAge = (age: number) => age >= 18 && age <= 50;

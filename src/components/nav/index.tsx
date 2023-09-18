@@ -59,7 +59,7 @@ export default function NavbarNested({ children, Links }: Props) {
 
   return (
     <>
-      <Navbar height={'100vh'} p="md" className={classes.navbar}>
+      <Navbar height={"100vh"} p="md" className={classes.navbar}>
         <Navbar.Section grow className={classes.links} component={ScrollArea}>
           <div className={classes.linksInner}>{links}</div>
         </Navbar.Section>

@@ -6,102 +6,54 @@ import {
   MRT_Cell,
   MRT_ColumnDef,
   MRT_Row,
+  useMantineReactTable,
 } from "mantine-react-table";
 import {
   Box,
   Button,
   Flex,
   Title,
-  ActionIcon,
   Stack,
   TextInput,
-  Tooltip,
   Modal,
   Text,
-  Menu,
 } from "@mantine/core";
 import { IconTrash, IconEdit } from "@tabler/icons-react";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import { modals } from "@mantine/modals";
-import Link from "next/link";
 
-import type { Student } from "@/app/students/page";
-import { nanoid } from "nanoid";
+import type { User } from "@/app/users-accounts/page";
+import { ButtonMenu } from "../../menuButton";
+import { deleteUser } from "./crudFunctions/delete";
+import updateUser from "./crudFunctions/update";
 
 type TableProps = {
-  students: Student[];
+  users: User[];
 };
 
-export default function StudentTable({ students }: TableProps) {
+export default function UsersTable({ users }: TableProps) {
   const { supabase } = useAuth();
-
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [tableData, setTableData] = useState(() => students);
+  const [tableData, setTableData] = useState(() => users);
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string;
   }>({});
 
-  const handleCreateNewRow = async (values: Student) => {
-    const { data: new_user, error: error1 } = await supabase.auth.signUp({
-      email: values.email,
-      password: nanoid(), //default password
-
-      //!! change it later with strong password auto generated user will invited by email to access and change password
-
-      options: {
-        emailRedirectTo: `${location.origin}/auth/callback`,
-        data: {
-          first_name: values.first_name,
-          last_name: values.last_name,
-          role: "student",
-          student_code: values.code,
-        },
-      },
-    });
-
-    if (error1) return;
-
-    const { error: error2 } = await supabase.from("users").insert({
-      id: new_user.user?.id,
-      first_name: values.first_name,
-      last_name: values.last_name,
-      user_email: values.email,
-    });
-
-    if (error2) return;
-
-    const { error: error3 } = await supabase
-      .from("students")
-      .insert({ id: new_user.user?.id, student_code: values.code });
-
-    if (error3) return;
-
+  const handleCreateNewRow = async (values: User) => {
     tableData.push(values);
     setTableData([...tableData]);
   };
 
-  const handleSaveRowEdits: MRT_TableOptions<Student>["onEditingRowSave"] =
+  const handleSaveRowEdits: MRT_TableOptions<User>["onEditingRowSave"] =
     async ({ exitEditingMode, row, values }) => {
       if (!Object.keys(validationErrors).length) {
         //?send/receive api updates here, then refetch or update local table data for re-render
 
-        // TODO ------ create supabase function handle update of student to avoid multi request -----
-        const { error: error1 } = await supabase
-          .from("users")
-          .update({
-            first_name: values.first_name,
-            last_name: values.last_name,
-            user_email: values.email,
-          })
-          .eq("id", row.getValue("student_id"))
-          .select();
+        const error = await updateUser(values);
 
-        const { error: error2 } = await supabase
-          .from("students")
-          .update({ student_code: values.code })
-          .eq("id", row.getValue("student_id"));
-
-        if (error1 || error2) return;
+        if(error) { 
+          console.log(error)
+        }
 
         tableData[row.index] = values;
         setTableData([...tableData]);
@@ -113,12 +65,13 @@ export default function StudentTable({ students }: TableProps) {
     setValidationErrors({});
   };
 
-  const openModal = (row: MRT_Row<Student>) => {
+  const openModal = (row: MRT_Row<User>) => {
     modals.openConfirmModal({
       title: "Please confirm your action",
       children: (
         <Text size="sm">
-          are you sure you want to delete student {row.getValue("first_name")}
+          are you sure you want to delete {row.getValue("role")}{" "}
+          {row.getValue("first_name")}
         </Text>
       ),
       labels: { confirm: "Confirm", cancel: "Cancel" },
@@ -128,32 +81,29 @@ export default function StudentTable({ students }: TableProps) {
   };
 
   const handleDeleteRow = useCallback(
-    (row: MRT_Row<Student>) => {
-      const deleteRow = async () => {
-        const { error } = await supabase
-          .from("users")
-          .delete()
-          .eq("id", row.getValue("student_id"));
+    async (row: MRT_Row<User>) => {
+      const error = await deleteUser(row.getValue("user_id"));
 
-        if (error) return;
-        tableData.splice(row.index, 1);
-        setTableData([...tableData]);
-      };
+      if (error) {
+        console.log(error);
+        return; //! preform error notification here
+      }
 
-      deleteRow();
+      tableData.splice(row.index, 1);
+      setTableData([...tableData]);
     },
     [tableData]
   );
 
   const getCommonEditTextInputProps = useCallback(
     (
-      cell: MRT_Cell<Student>
-    ): MRT_ColumnDef<Student>["mantineEditTextInputProps"] => {
+      cell: MRT_Cell<User>
+    ): MRT_ColumnDef<User>["mantineEditTextInputProps"] => {
       return {
         error: validationErrors[cell.id],
         onBlur: (event) => {
           const isValid =
-            cell.column.id === "email"
+            cell.column.id === "user_email"
               ? validateEmail(event.target.value)
               : validateRequired(event.target.value);
           if (!isValid) {
@@ -175,26 +125,18 @@ export default function StudentTable({ students }: TableProps) {
     [validationErrors]
   );
 
-  const columns = useMemo<MRT_ColumnDef<Student>[]>(
+  const columns = useMemo<MRT_ColumnDef<User>[]>(
     () => [
       {
-        accessorKey: "student_id",
+        accessorKey: "user_id",
         header: "ID",
         enableColumnOrdering: false,
         enableEditing: false, //disable editing on this column
         enableSorting: false,
         enableClickToCopy: false,
         size: 4,
-        columnDefType: "data",
       },
-      {
-        accessorKey: "code",
-        header: "code",
 
-        mantineEditTextInputProps: ({ cell  }) => ({
-          ...getCommonEditTextInputProps(cell),
-        }),
-      },
       {
         accessorKey: "first_name",
         header: "First Name",
@@ -212,12 +154,22 @@ export default function StudentTable({ students }: TableProps) {
         }),
       },
       {
-        accessorKey: "email",
+        accessorKey: "user_email",
         header: "Email",
         mantineEditTextInputProps: ({ cell }) => ({
           ...getCommonEditTextInputProps(cell),
           type: "email",
         }),
+      },
+      {
+        accessorKey: "role",
+        header: "Role",
+        enableEditing: false,
+        GroupedCell: ({ cell, row }) => (
+          <Box sx={{ color: "teal" }}>
+            <strong>{cell.getValue<string>()}s </strong> ({row.subRows?.length})
+          </Box>
+        ),
       },
     ],
     [getCommonEditTextInputProps]
@@ -237,46 +189,40 @@ export default function StudentTable({ students }: TableProps) {
         enableClickToCopy
         columns={columns}
         data={tableData}
+        enableGrouping={true}
         editingMode="modal" //default
         enableColumnOrdering
         enableEditing
         onEditingRowSave={handleSaveRowEdits}
         onEditingRowCancel={handleCancelRowEdits}
-        renderRowActions={({ row, table }) => (
-          <Box sx={{ display: "flex", gap: "16px" }}>
-            <Tooltip position="left" label="Edit">
-              <ActionIcon onClick={() => table.setEditingRow(row)}>
-                <IconEdit />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip position="right" label="Delete">
-              <ActionIcon
-                color="red"
-                onClick={() => {
-                  openModal(row);
-                }}
-              >
-                <IconTrash />
-              </ActionIcon>
-            </Tooltip>
-          </Box>
-        )}
+        renderRowActions={({ row, table }) => {
+          const menuDropDown = [
+            {
+              label: "Edit",
+              icon: <IconEdit />,
+              onclick: () => {
+                table.setEditingRow(row);
+              },
+            },
+            {
+              label: "Delete",
+              icon: <IconTrash color="red" />,
+              onclick: () => {
+                openModal(row);
+              },
+            },
+          ];
+          return (
+            <Box sx={{ display: "flex", gap: "16px" }}>
+              <ButtonMenu ButtonLabel={"menu"} DropDown={menuDropDown} />
+            </Box>
+          );
+        }}
         renderTopToolbarCustomActions={() => (
           <Box>
             <Button onClick={() => setCreateModalOpen(true)} variant="light">
               Create New Account
             </Button>
-
-            <Menu>
-              <Menu.Target>
-                <Button variant="light">specialty</Button>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Link href="students/?specialty=computerscience">
-                  computer science
-                </Link>
-              </Menu.Dropdown>
-            </Menu>
           </Box>
         )}
       />
@@ -292,9 +238,9 @@ export default function StudentTable({ students }: TableProps) {
 }
 
 interface Props {
-  columns: MRT_ColumnDef<Student>[];
+  columns: MRT_ColumnDef<User>[];
   onClose: () => void;
-  onSubmit: (values: Student) => void;
+  onSubmit: (values: User) => void;
   open: boolean;
 }
 
@@ -305,9 +251,7 @@ export const CreateNewAccountModal = ({
   onClose,
   onSubmit,
 }: Props) => {
-  const inputs = columns.filter(
-    (column) => column.accessorKey !== "student_id"
-  );
+  const inputs = columns.filter((column) => column.accessorKey !== "user_id");
 
   const [values, setValues] = useState<any>(() =>
     inputs.reduce((acc, column) => {
@@ -318,7 +262,6 @@ export const CreateNewAccountModal = ({
 
   const handleSubmit = async () => {
     //put your validation logic here
-
     onSubmit(values);
     onClose();
   };
@@ -372,4 +315,3 @@ const validateEmail = (email: string) =>
     .match(
       /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
     );
-const validateAge = (age: number) => age >= 18 && age <= 50;

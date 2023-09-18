@@ -2,6 +2,7 @@
 import {
   ADMINLINKS,
   ROLES,
+  SPECIALTY_MANAGER_LINKS,
   STUDENTLINKS,
   TEACHERLINKS,
   useAuth,
@@ -12,7 +13,7 @@ import TeacherDashBoard from "./teacherDashBoard";
 import StudentDashBoard from "./studentDashBoard";
 import { useRouter } from "next/navigation";
 import NavbarNested from "@/components/nav";
-import { Flex } from "@mantine/core";
+import { Flex, ScrollArea } from "@mantine/core";
 
 type Props = {
   children: React.ReactNode;
@@ -21,10 +22,9 @@ type Props = {
 export function DashBoard({ children }: Props) {
   const router = useRouter();
 
-  const { role, session } = useAuth();
+  const { role } = useAuth();
 
   // if (!session) router.push("/login");
-
 
   switch (role[0].role) {
     case ROLES.ADMIN.role:
@@ -38,15 +38,29 @@ export function DashBoard({ children }: Props) {
       );
     case ROLES.TEACHER.role:
       return (
-        <NavbarNested Links={TEACHERLINKS}>
-          <TeacherDashBoard />
-        </NavbarNested>
+        <Flex justify={"space-between"} gap={0}>
+          <NavbarNested Links={TEACHERLINKS}>
+            <div style={{ width: "100%", zIndex: 2 }}>{children}</div>
+          </NavbarNested>
+        </Flex>
       );
     case ROLES.STUDENT.role:
       return (
-        <NavbarNested Links={STUDENTLINKS}>
-          <StudentDashBoard />
-        </NavbarNested>
+        <Flex justify={"start"} align={"start"} gap={0} sx={{ width: "100%" }}>
+          <NavbarNested Links={STUDENTLINKS}></NavbarNested>
+          <ScrollArea h={"100vh"} w={"100%"} scrollbarSize={0}>
+            <div style={{ width: "100%", zIndex: 2 }}>{children}</div>
+          </ScrollArea>
+        </Flex>
+      );
+    case ROLES.SPECIALTY_MANAGER.role:
+      return (
+        <Flex justify={"start"} align={"start"} gap={0} sx={{ width: "100%" }}>
+          <NavbarNested Links={SPECIALTY_MANAGER_LINKS}></NavbarNested>
+          <ScrollArea h={"100vh"} w={"100%"} scrollbarSize={0}>
+            <div style={{ width: "100%", zIndex: 2 }}>{children}</div>
+          </ScrollArea>
+        </Flex>
       );
     case ROLES.UNAUTH.role:
       return <>{children}</>;

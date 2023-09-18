@@ -38,7 +38,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         withNormalizeCSS
         theme={{
           colorScheme: colorScheme,
-          primaryColor: "blue",
+          primaryColor: "teal",
           loader: "dots",
         }}
       >

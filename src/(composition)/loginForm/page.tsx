@@ -12,6 +12,8 @@ import {
   rem,
   Alert,
   Overlay,
+  Group,
+  Anchor,
 } from "@mantine/core";
 //? ________________________________________________________________
 //? style requirement _________________________________________
@@ -50,8 +52,8 @@ import { isPasswordValid } from "@/utils/validators/validSchema";
 import { useRouter, useSearchParams } from "next/navigation";
 import { IconAlertCircle } from "@tabler/icons-react";
 import handleSignIn from "@/functions/handleSignIn";
+import Link from "next/link";
 //? ________________________________________________________________
-
 
 export default function LoginForm() {
   const { classes } = useStyles();
@@ -115,6 +117,7 @@ export default function LoginForm() {
             size="md"
             {...loginForm.getInputProps("email")}
           />
+
           <PasswordInput
             label="Password"
             placeholder="Your password"
@@ -122,6 +125,13 @@ export default function LoginForm() {
             size="md"
             {...loginForm.getInputProps("password")}
           />
+          <Group position="right" mt="sm">
+            <Link href="/login/recover">
+              <Anchor component="button" size="sm">
+                Forgot password?
+              </Anchor>
+            </Link>
+          </Group>
           <Button
             disabled={loginLoading}
             type="submit"

@@ -9,15 +9,16 @@ import {
   Menu,
   Flex,
 } from "@mantine/core";
-import { IconChevronRight, IconUsers } from "@tabler/icons-react";
+import { IconChevronRight, IconLogout, IconUsers } from "@tabler/icons-react";
 import { useAuth } from "../Auth/AuthProvider";
+import { useRouter } from "next/navigation";
 // import { signOut } from "next-auth/react";
 
 const useStyles = createStyles((theme) => ({
   user: {
     display: "block",
     width: "100%",
-    height : "100%",
+    height: "100%",
     padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
     color: theme.colorScheme === "dark" ? theme.colors.dark[0] : theme.black,
     "&:hover": {
@@ -45,6 +46,7 @@ export default function UserButton({
 }: UserButtonProps) {
   const { classes } = useStyles();
 
+  const  router = useRouter()
   const { signOut } = useAuth();
 
   return (
@@ -64,14 +66,16 @@ export default function UserButton({
               <Text size="sm" weight={500}>
                 {Username}
               </Text>
-{/* //TODO ROLES DISPLAYED IN DEV MODE ONLY */}
-              <Flex gap={'xs'} >
-              {role?.map((value: { role: string }) => {
-                return (
-                    <Text key={value.role} className="text-teal-500 text-sm" >{value.role}</Text>
-                    );
-                  })}
-                  </Flex>
+              {/* //TODO ROLES DISPLAYED IN DEV MODE ONLY */}
+              <Flex gap={"xs"}>
+                {role?.map((value: { role: string }) => {
+                  return (
+                    <Text key={value.role} className="text-teal-500 text-sm">
+                      {value.role}
+                    </Text>
+                  );
+                })}
+              </Flex>
 
               <Text color="dimmed" size="xs">
                 {email}
@@ -81,8 +85,17 @@ export default function UserButton({
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>
+        <Menu.Item icon={<IconUsers size="1rem" stroke={1.5} />}
+          onClick={ () => { 
+            router.push('/profile')
+          }}
+        >
+          <Text size="xs" transform="uppercase" weight={700} color="dimmed">
+            profile
+          </Text>
+        </Menu.Item>
         <Menu.Item
-          icon={<IconUsers size="1rem" stroke={1.5} />}
+          icon={<IconLogout size="1rem" stroke={1.5} />}
           onClick={() => {
             signOut();
           }}
